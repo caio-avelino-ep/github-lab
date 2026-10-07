@@ -1,4 +1,6 @@
 terraform {
+  backend "pg" {}
+
   required_providers {
     github = {
       source  = "integrations/github"

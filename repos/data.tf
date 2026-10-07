@@ -1,7 +1,7 @@
 data "terraform_remote_state" "base" {
-  backend = "local"
+  backend = "pg"
 
   config = {
-    path = "../base/terraform.tfstate"
+    conn_str = "host=localhost port=5432 user=tfstate dbname=base sslmode=disable"
   }
 }
