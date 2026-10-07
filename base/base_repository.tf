@@ -1,4 +1,4 @@
-resource "github_repository" "tf_github_lab_base_repository" {
+resource "github_repository" "tf_github_lab_devops_repository" {
   name                 = "tf-lab-devops"
   description          = "${local.org_name}, repository for DevOps team"
   vulnerability_alerts = true

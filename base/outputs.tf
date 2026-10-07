@@ -29,5 +29,5 @@ output "secret_names" {
 
 output "base_repository_name" {
   description = "The name of the base repository."
-  value       = github_repository.tf_github_lab_base_repository.name
+  value       = github_repository.tf_github_lab_devops_repository.name
 }
