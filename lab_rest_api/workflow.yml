@@ -103,7 +103,7 @@ jobs:
             --data-urlencode 'matchRegex=false' \
             --data-urlencode 'matchString=Authorization' \
             --data-urlencode "replacement=$auth_token" \
-            --data-urlencode 'initiators=' > /dev/null
+            > /dev/null
 
       - name: Run authenticated ZAP scan (DAST)
         run: |
