@@ -1,5 +1,6 @@
 data "github_organization" "this" {
-  name = "AvelinoOrg"
+  name         = "AvelinoOrg"
+  summary_only = true
 }
 
 data "github_organization_teams" "all" {}
