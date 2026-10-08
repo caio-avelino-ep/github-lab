@@ -46,6 +46,6 @@ resource "github_team_repository" "devops" {
 resource "github_repository_file" "codeowners" {
   repository     = github_repository.tf_lab_app.name
   file           = ".github/CODEOWNERS"
-  content        = "* @AvelinoOrg/${data.terraform_remote_state.base.outputs.security_manager_team_slug}"
+  content        = "* @AvelinoOrg/${local.security_manager_team_slug}"
   commit_message = "Add CODEOWNERS file"
 }
