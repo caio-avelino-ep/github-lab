@@ -47,6 +47,7 @@ jobs:
       - name: Run ESLint (SAST)
         run: |
           mv .eslintrc.js .eslintrc.cjs
+          sed -i 's/plugin:security\/recommended/plugin:security\/recommended-legacy/' .eslintrc.cjs
           npx eslint . --ext .js --parser-options '{"ecmaVersion":"latest"}'
 
       - name: Install OWASP ZAP
