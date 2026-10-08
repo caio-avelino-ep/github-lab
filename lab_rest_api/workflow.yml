@@ -48,6 +48,7 @@ jobs:
         run: |
           mv .eslintrc.js .eslintrc.cjs
           sed -i 's/plugin:security\/recommended/plugin:security\/recommended-legacy/' .eslintrc.cjs
+          sed -i 's/"ecmaVersion": 2020/"ecmaVersion": "latest",\n    "sourceType": "module"/' .eslintrc.cjs
           npx eslint . --ext .js --parser-options '{"ecmaVersion":"latest"}'
 
       - name: Install OWASP ZAP
