@@ -56,8 +56,6 @@ jobs:
           wget -q https://github.com/zaproxy/zaproxy/releases/download/v2.16.0/ZAP_2.16.0_Linux.tar.gz
           tar -xzf ZAP_2.16.0_Linux.tar.gz
           echo "ZAP_PATH=$PWD/ZAP_2.16.0" >> "$GITHUB_ENV"
-          python3 -m venv .venv-zap
-          .venv-zap/bin/pip install zapcli
 
       - name: Run application
         run: |
@@ -84,7 +82,13 @@ jobs:
         run: |
           "$ZAP_PATH/zap.sh" -daemon -host 127.0.0.1 -port 8090 -config api.disablekey=true > zap.log 2>&1 &
           echo $! > zap.pid
-          .venv-zap/bin/zap-cli -p 8090 status -t 120
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://localhost:8090/JSON/core/view/version/ > /dev/null; then
+              break
+            fi
+            sleep 2
+          done
+          curl --fail --silent --show-error http://localhost:8090/JSON/core/view/version/ > /dev/null
           auth_token="$(curl --fail --silent --show-error \
             -H 'Content-Type: application/json' \
             -X POST http://localhost:3123/auth/login \
@@ -102,10 +106,35 @@ jobs:
             --data-urlencode 'initiators=' > /dev/null
 
       - name: Run authenticated ZAP scan (DAST)
-        run: .venv-zap/bin/zap-cli -p 8090 -v quick-scan --spider http://localhost:3123/
+        run: |
+          spider_id="$(curl --fail --silent --show-error --get \
+            --data-urlencode 'url=http://localhost:3123/' \
+            http://localhost:8090/JSON/spider/action/scan/ | jq -er '.scan')"
+          spider_status=0
+          while [ "$spider_status" -lt 100 ]; do
+            spider_status="$(curl --fail --silent --show-error --get \
+              --data-urlencode "scanId=$spider_id" \
+              http://localhost:8090/JSON/spider/view/status/ | jq -er '.status')"
+            if [ "$spider_status" -lt 100 ]; then sleep 2; fi
+          done
+
+          scan_id="$(curl --fail --silent --show-error --get \
+            --data-urlencode 'url=http://localhost:3123/' \
+            --data-urlencode 'recurse=true' \
+            http://localhost:8090/JSON/ascan/action/scan/ | jq -er '.scan')"
+          scan_status=0
+          while [ "$scan_status" -lt 100 ]; do
+            scan_status="$(curl --fail --silent --show-error --get \
+              --data-urlencode "scanId=$scan_id" \
+              http://localhost:8090/JSON/ascan/view/status/ | jq -er '.status')"
+            if [ "$scan_status" -lt 100 ]; then sleep 5; fi
+          done
 
       - name: Stop application and ZAP
         if: always()
         run: |
-          if [ -f zap.pid ]; then kill "$(cat zap.pid)" 2>/dev/null || true; fi
+          if [ -f zap.pid ]; then
+            curl --silent --request POST http://localhost:8090/JSON/core/action/shutdown/ > /dev/null || true
+            kill "$(cat zap.pid)" 2>/dev/null || true
+          fi
           if [ -f app.pid ]; then kill "$(cat app.pid)" 2>/dev/null || true; fi
